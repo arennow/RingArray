@@ -8,7 +8,9 @@ final class RingArrayTests: XCTestCase {
 		("testRemoveFirst", testRemoveFirst),
 		("testRemoveMiddle", testRemoveMiddle),
 		("testRemoveLast", testRemoveLast),
-		("testRemoveFirstThenMiddle", testRemoveFirstThenMiddle)
+		("testRemoveFirstThenMiddle", testRemoveFirstThenMiddle),
+		("testWrapNoRealloc", testWrapNoRealloc),
+		("testWrapWholeBuffer", testWrapWholeBuffer)
 	]
 	
 	func testAppend() {
@@ -56,5 +58,37 @@ final class RingArrayTests: XCTestCase {
 		ra.remove(at: 0)
 		ra.remove(at: 4)
 		XCTAssertEqual(Array(ra), [1, 2, 3, 4, 6, 7, 8, 9])
+	}
+	
+	func testWrapNoRealloc() {
+		let capacity = 10
+		let ra = RingArray<Int>(startingSize: capacity)
+		
+		for i in 0..<10 { ra.append(i) }
+		for _ in 0..<5 { ra.remove(at: 0) }
+		
+		XCTAssertEqual(Array(ra), Array(5..<10))
+		
+		for i in 100..<102 {
+			ra.append(i)
+		}
+		
+		XCTAssertEqual(ra[6], 101)
+		XCTAssertEqual(Array(ra), [5, 6, 7, 8, 9, 100, 101])
+		XCTAssertEqual(ra.capacity, capacity)
+	}
+	
+	func testWrapWholeBuffer() {
+		let capacity = 10
+		let ra = RingArray<Int>(startingSize: capacity)
+		
+		for i in 0..<capacity { ra.append(i) }
+		while !ra.isEmpty { ra.remove(at: 0) }
+		
+		for i in 100..<(100+capacity) { ra.append(i) }
+		
+		XCTAssertEqual(ra[6], 106)
+		XCTAssertEqual(Array(ra), Array(100..<(100+capacity)))
+		XCTAssertEqual(ra.capacity, capacity)
 	}
 }

@@ -2,7 +2,14 @@ public class RingArray<Element>: Collection {
 	private var internalBuffer: UnsafeMutableBufferPointer<Element?>
 	public private(set) var capacity: Int
 	public private(set) var count: Int = 0
-	private(set) var bufferStartOffset: Int = 0
+	private(set) var bufferStartOffset: Int = 0 {
+		didSet {
+			if self.bufferStartOffset >= self.capacity {
+				// If our offset is the whole buffer, wrap the offset back to the beginning
+				self.bufferStartOffset = 0
+			}
+		}
+	}
 	
 	public let startIndex: Int = 0
 	public var endIndex: Int { count }
@@ -80,7 +87,15 @@ extension RingArray {
 	private var lastValidIndex: Int { self.count - 1 }
 	
 	private func bufferIndex(for index: Int) -> Int {
-		self.bufferStartOffset + index
+		var outInd = self.bufferStartOffset + index
+		if outInd >= self.capacity {
+			outInd -= self.capacity
+		}
+		
+		assert(outInd >= 0, "Buffer index \(outInd) out of bounds: \(self.capacity)")
+		assert(outInd < capacity, "Buffer index \(outInd) out of bounds: \(self.capacity)")
+		
+		return outInd
 	}
 	
 	private func pointer(for index: Int) -> UnsafeMutablePointer<Element?> {

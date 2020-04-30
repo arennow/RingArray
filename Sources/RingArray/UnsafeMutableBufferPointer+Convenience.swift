@@ -11,7 +11,7 @@ extension UnsafeMutableBufferPointer {
 		dstPtr.moveAssign(from: srcPtr, count: 1)
 		
 		switch srcPostState {
-			case .value(let val): srcPtr.pointee = val
+			case .value(let val): srcPtr.initialize(to: val)
 			case .uninitialized: break
 		}
 	}
