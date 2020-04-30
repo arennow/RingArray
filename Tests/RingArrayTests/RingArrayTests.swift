@@ -3,7 +3,9 @@ import RingArray
 
 final class RingArrayTests: XCTestCase {
 	static var allTests = [
+		("testArrayLiteralInit", testArrayLiteralInit),
 		("testAppend", testAppend),
+		("testAppendContentsOf", testAppendContentsOf),
 		("testAddViaSubscript", testAddViaSubscript),
 		("testRemoveFirst", testRemoveFirst),
 		("testRemoveMiddle", testRemoveMiddle),
@@ -17,6 +19,12 @@ final class RingArrayTests: XCTestCase {
 		("testWrappingRealloc", testWrappingRealloc)
 	]
 	
+	func testArrayLiteralInit() {
+		let ra: RingArray = [0, 1, 2, 3, 4, 5]
+		
+		XCTAssertEqual(Array(ra), [0, 1, 2, 3, 4, 5])
+	}
+	
 	func testAppend() {
 		let ra = RingArray<Int>()
 		for i in 0..<10 {
@@ -24,6 +32,13 @@ final class RingArrayTests: XCTestCase {
 		}
 		
 		XCTAssertEqual(Array(ra), Array(0..<10))
+	}
+	
+	func testAppendContentsOf() {
+		let ra = RingArray<Int>()
+		ra.append(contentsOf: 5...10)
+		
+		XCTAssertEqual(Array(ra), Array(5...10))
 	}
 	
 	func testAddViaSubscript() {

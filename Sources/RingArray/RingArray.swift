@@ -75,10 +75,22 @@ public final class RingArray<Element>: Collection {
 	public func index(after i: Int) -> Int { i + 1 }
 }
 
+extension RingArray: ExpressibleByArrayLiteral {
+	public convenience init(arrayLiteral elements: Element...) {
+		self.init(elements)
+	}
+}
+
 extension RingArray {
 	convenience public init<S: Sequence>(_ seq: S) where S.Element == Element {
 		self.init()
 		seq.forEach(self.append)
+	}
+	
+	convenience public init(single: Element) {
+		self.init()
+		
+		self.append(single)
 	}
 	
 	@discardableResult
@@ -93,6 +105,10 @@ extension RingArray {
 		guard !self.isEmpty else { return nil }
 		
 		return self.remove(at: self.lastValidIndex)
+	}
+	
+	public func append<S: Sequence>(contentsOf seq: S) where S.Element == Element {
+		seq.forEach(self.append)
 	}
 }
 
