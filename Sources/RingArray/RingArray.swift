@@ -44,10 +44,12 @@ public final class RingArray<Element>: Collection {
 		self[self.count] = element
 	}
 	
-	public func remove(at index: Int) {
+	@discardableResult
+	public func remove(at index: Int) -> Element {
 		ensureWithinCount(index)
 		
-		self.pointer(for: index).pointee = nil
+		let ptr = self.pointer(for: index)
+		let outValue = ptr.move(replacingWith: .value(nil))!
 		
 		if index == 0 {
 			self.bufferStartOffset += 1
@@ -66,6 +68,7 @@ public final class RingArray<Element>: Collection {
 		}
 		
 		self.count -= 1
+		return outValue
 	}
 	
 	public func index(before i: Int) -> Int { i - 1 }
@@ -76,6 +79,20 @@ extension RingArray {
 	convenience public init<S: Sequence>(_ seq: S) where S.Element == Element {
 		self.init()
 		seq.forEach(self.append)
+	}
+	
+	@discardableResult
+	public func popFirst() -> Element? {
+		guard !self.isEmpty else { return nil }
+		
+		return self.remove(at: 0)
+	}
+	
+	@discardableResult
+	public func popLast() -> Element? {
+		guard !self.isEmpty else { return nil }
+		
+		return self.remove(at: self.lastValidIndex)
 	}
 }
 

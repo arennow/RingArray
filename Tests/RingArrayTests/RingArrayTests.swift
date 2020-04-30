@@ -9,6 +9,8 @@ final class RingArrayTests: XCTestCase {
 		("testRemoveMiddle", testRemoveMiddle),
 		("testRemoveLast", testRemoveLast),
 		("testRemoveFirstThenMiddle", testRemoveFirstThenMiddle),
+		("testPopFirst", testPopFirst),
+		("testPopLast", testPopLast),
 		("testWrapNoRealloc", testWrapNoRealloc),
 		("testWrapWholeBuffer", testWrapWholeBuffer),
 		("testStraightRealloc", testStraightRealloc),
@@ -60,6 +62,20 @@ final class RingArrayTests: XCTestCase {
 		ra.remove(at: 0)
 		ra.remove(at: 4)
 		XCTAssertEqual(Array(ra), [1, 2, 3, 4, 6, 7, 8, 9])
+	}
+	
+	func testPopFirst() {
+		let ra = RingArray(0..<10)
+		
+		XCTAssertEqual(ra.popFirst(), 0)
+		XCTAssertEqual(Array(ra), Array(1..<10))
+	}
+	
+	func testPopLast() {
+		let ra = RingArray(0..<10)
+		
+		XCTAssertEqual(ra.popLast(), 9)
+		XCTAssertEqual(Array(ra), Array(0..<9))
 	}
 	
 	func testWrapNoRealloc() {
