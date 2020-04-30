@@ -1,5 +1,5 @@
-public class RingArray<Element>: Collection {
-	private var internalBuffer: UnsafeMutableBufferPointer<Element?>
+public final class RingArray<Element>: Collection {
+	private var internalBuffer: UnsafeMutableBufferPointer<Element?> { didSet { oldValue.deallocate() } }
 	public private(set) var capacity: Int
 	public private(set) var count: Int = 0
 	private(set) var bufferStartOffset: Int = 0 {
@@ -16,8 +16,7 @@ public class RingArray<Element>: Collection {
 	
 	public init(startingSize: Int = 64) {
 		self.capacity = startingSize
-		self.internalBuffer = .allocate(capacity: self.capacity)
-		self.internalBuffer.initialize(repeating: nil)
+		self.internalBuffer = type(of: self).callocBuffer(capacity: self.capacity)
 	}
 	
 	deinit {
@@ -31,6 +30,8 @@ public class RingArray<Element>: Collection {
 		}
 		set {
 			ensureWithinCount(index, gte: true)
+			self.ensureCapacity(for: index)
+			
 			self.pointer(for: index).pointee = newValue
 			
 			if index == self.count {
@@ -100,5 +101,47 @@ extension RingArray {
 	
 	private func pointer(for index: Int) -> UnsafeMutablePointer<Element?> {
 		self.internalBuffer.baseAddress!.advanced(by: self.bufferIndex(for: index))
+	}
+}
+
+extension RingArray {
+	private static func callocBuffer(capacity: Int) -> UnsafeMutableBufferPointer<Element?> {
+		let outBuf = UnsafeMutableBufferPointer<Element?>.allocate(capacity: capacity)
+		outBuf.initialize(repeating: nil)
+		return outBuf
+	}
+	
+	private func ensureCapacity(for index: Int) {
+		guard index >= self.capacity else { return }
+		
+		let newCapacity = self.capacity * 2
+		let newBuffer = type(of: self).callocBuffer(capacity: newCapacity)
+		
+		let (firstChunk, secondChunk) = self.chunksToMove()
+		
+		newBuffer.baseAddress!.moveAssign(from: firstChunk.first!, count: firstChunk.count)
+		
+		if let secondChunk = secondChunk {
+			newBuffer.baseAddress!.advanced(by: firstChunk.count).moveAssign(from: secondChunk.first!, count: secondChunk.count)
+		}
+		
+		self.internalBuffer = newBuffer
+		self.bufferStartOffset = 0
+		self.capacity = newCapacity
+	}
+	
+	private func chunksToMove() -> (Range<UnsafeMutablePointer<Element?>>, Range<UnsafeMutablePointer<Element?>>?) {
+		let firstChunkStartPtr = self.internalBuffer.baseAddress!.advanced(by: self.bufferStartOffset)
+		let firstChunkEndPtr = Swift.min(firstChunkStartPtr.advanced(by: self.count), self.internalBuffer.endAddress!)
+		let firstChunk = firstChunkStartPtr..<firstChunkEndPtr
+		
+		let remainingItems = self.count - firstChunk.count
+		guard remainingItems > 0 else { return (firstChunk, nil) }
+		
+		let secondChunkStartPtr = self.internalBuffer.baseAddress!
+		let secondChunkEndPtr = secondChunkStartPtr.advanced(by: remainingItems)
+		let secondChunk = secondChunkStartPtr..<secondChunkEndPtr
+		
+		return (firstChunk, secondChunk)
 	}
 }
