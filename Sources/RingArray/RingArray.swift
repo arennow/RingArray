@@ -48,8 +48,16 @@ public final class RingArray<Element>: Collection {
 	public func remove(at index: Int) -> Element {
 		ensureWithinCount(index)
 		
+		let postState: UnsafeMutablePointer<Element?>.PostState
+		
+		if index == 0 {
+			postState = .value(nil)
+		} else {
+			postState = .uninitialized
+		}
+		
 		let ptr = self.pointer(for: index)
-		let outValue = ptr.move(replacingWith: .value(nil))!
+		let outValue = ptr.move(replacingWith: postState)!
 		
 		if index == 0 {
 			self.bufferStartOffset += 1

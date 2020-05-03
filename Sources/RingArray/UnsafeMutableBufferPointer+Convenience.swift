@@ -8,7 +8,7 @@ extension UnsafeMutableBufferPointer {
 		let srcPtr = self.baseAddress!.advanced(by: src)
 		let dstPtr = self.baseAddress!.advanced(by: dest)
 		
-		dstPtr.moveAssign(from: srcPtr, count: 1)
+		dstPtr.moveInitialize(from: srcPtr, count: 1)
 		
 		srcPtr.apply(postState: srcPostState)
 	}
